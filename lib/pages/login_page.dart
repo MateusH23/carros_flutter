@@ -1,3 +1,9 @@
+import 'package:carros/api_response.dart';
+import 'package:carros/login_api.dart';
+import 'package:carros/pages/home_page.dart';
+import 'package:carros/usuario.dart';
+import 'package:carros/util/alert.dart';
+import 'package:carros/util/nav.dart';
 import 'package:carros/widgets/app_button.dart';
 import 'package:carros/widgets/app_text.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +21,8 @@ class _LoginPageState extends State<LoginPage> {
   final _tLogin = TextEditingController();
 
   final _tSenha = TextEditingController();
+
+  bool _showProgress = false;
 
   @override
   void initState() {
@@ -38,7 +46,7 @@ class _LoginPageState extends State<LoginPage> {
     return Form(
       key: _formKey,
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(20),
         child: ListView(
           children: <Widget>[
             AppText(
@@ -68,6 +76,7 @@ class _LoginPageState extends State<LoginPage> {
             AppButton(
               "Login",
               onPressed: _onClickLogin,
+              showProgress: _showProgress,
             ),
           ],
         ),
@@ -75,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  _onClickLogin() {
+  _onClickLogin() async {
     if (!_formKey.currentState.validate()) {
       return;
     }
@@ -83,6 +92,23 @@ class _LoginPageState extends State<LoginPage> {
     String login = _tLogin.text;
     String senha = _tSenha.text;
     print("Login: $login, Senha: $senha");
+
+    setState(() {
+      _showProgress = true;
+    });
+
+    ApiResponse response = await LoginApi.login(login, senha);
+
+    if (response.ok) {
+      push(context, HomePage());
+      print(">>> ${response.result} <<<");
+    } else {
+      alert(context, response.msg);
+    }
+
+    setState(() {
+      _showProgress = false;
+    });
   }
 
   // ignore: missing_return
