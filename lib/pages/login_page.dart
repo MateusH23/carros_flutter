@@ -100,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
     ApiResponse response = await LoginApi.login(login, senha);
 
     if (response.ok) {
-      push(context, HomePage());
+      push(context, HomePage(), replace: true);
       print(">>> ${response.result} <<<");
     } else {
       alert(context, response.msg);
