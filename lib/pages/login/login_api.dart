@@ -27,6 +27,11 @@ class LoginApi {
       }
 
       final user = Usuario.fromJson(responseMap);
+      user.save();
+
+      Usuario user2 = await Usuario.get();
+
+      print("USER 2: $user2");
 
       return ApiResponse.ok(user);
     } catch (error, exception) {
