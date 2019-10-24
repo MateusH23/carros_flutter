@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:carros/api_response.dart';
 import 'package:carros/pages/login/login_api.dart';
 import 'package:carros/pages/carros/home_page.dart';
@@ -22,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final _tSenha = TextEditingController();
 
-  bool _showProgress = false;
+  final _streamController = StreamController<bool>();
 
   @override
   void initState() {
@@ -80,10 +82,16 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(
               height: 10,
             ),
-            AppButton(
-              "Login",
-              onPressed: _onClickLogin,
-              showProgress: _showProgress,
+            StreamBuilder<bool>(
+              stream: _streamController.stream,
+              initialData: false,
+              builder: (context, snapshot) {
+                return AppButton(
+                  "Login",
+                  onPressed: _onClickLogin,
+                  showProgress: snapshot.data,
+                );
+              }
             ),
           ],
         ),
@@ -100,9 +108,7 @@ class _LoginPageState extends State<LoginPage> {
     String senha = _tSenha.text;
     print("Login: $login, Senha: $senha");
 
-    setState(() {
-      _showProgress = true;
-    });
+    _streamController.add(true);
 
     ApiResponse response = await LoginApi.login(login, senha);
 
@@ -113,9 +119,7 @@ class _LoginPageState extends State<LoginPage> {
       alert(context, response.msg);
     }
 
-    setState(() {
-      _showProgress = false;
-    });
+    _streamController.add(false);
   }
 
   // ignore: missing_return
@@ -134,5 +138,11 @@ class _LoginPageState extends State<LoginPage> {
     if (text.length < 3) {
       return "Senha deve possuir no mínimo 3 dígitos";
     }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _streamController.close();
   }
 }

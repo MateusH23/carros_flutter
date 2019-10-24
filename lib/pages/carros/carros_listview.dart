@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:carros/pages/carros/carro.dart';
+import 'package:carros/pages/carros/carro_page.dart';
 import 'package:carros/pages/carros/carros_api.dart';
+import 'package:carros/util/nav.dart';
 import 'package:flutter/material.dart';
 
 class CarrosListView extends StatefulWidget {
@@ -11,20 +15,33 @@ class CarrosListView extends StatefulWidget {
   _CarrosListViewState createState() => _CarrosListViewState();
 }
 
-class _CarrosListViewState extends State<CarrosListView> with AutomaticKeepAliveClientMixin<CarrosListView>{
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    return _body();
-  }
+class _CarrosListViewState extends State<CarrosListView>
+    with AutomaticKeepAliveClientMixin<CarrosListView> {
+
+  List<Carro> carros;
+  final _streamController = StreamController<List<Carro>>();
 
   @override
   bool get wantKeepAlive => true;
 
-  _body() {
-    Future<List<Carro>> future = CarrosApi.getCarros(this.widget.tipo);
-    return FutureBuilder(
-      future: future,
+  @override
+  void initState() {
+    super.initState();
+    if(!_streamController.isClosed)
+      _loadCarros();
+  }
+
+  void _loadCarros() async {
+    List<Carro> listCarros = await CarrosApi.getCarros(this.widget.tipo);
+    _streamController.add(listCarros);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+
+    return StreamBuilder(
+      stream: _streamController.stream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           print(snapshot.error);
@@ -85,7 +102,9 @@ class _CarrosListViewState extends State<CarrosListView> with AutomaticKeepAlive
                     child: ButtonBar(
                       children: <Widget>[
                         FlatButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            _onClickCarro(c);
+                          },
                           child: Text(
                             "DETALHES",
                           ),
@@ -108,4 +127,13 @@ class _CarrosListViewState extends State<CarrosListView> with AutomaticKeepAlive
     );
   }
 
+  _onClickCarro(Carro c) {
+    push(context, CarroPage(c));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _streamController.close();
+  }
 }

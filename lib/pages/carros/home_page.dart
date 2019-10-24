@@ -60,7 +60,6 @@ class _HomePageState extends State<HomePage>
     _tabController.index = await Prefs.getInt("tabIdx");
 
     _tabController.addListener(() {
-      print(_tabController.index);
       Prefs.setInt("tabIdx", _tabController.index);
     });
   }
