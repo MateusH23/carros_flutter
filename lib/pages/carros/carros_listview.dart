@@ -1,9 +1,8 @@
-import 'dart:async';
-
 import 'package:carros/pages/carros/carro.dart';
 import 'package:carros/pages/carros/carro_page.dart';
-import 'package:carros/pages/carros/carros_api.dart';
+import 'package:carros/pages/carros/carros_bloc.dart';
 import 'package:carros/util/nav.dart';
+import 'package:carros/widgets/text_error.dart';
 import 'package:flutter/material.dart';
 
 class CarrosListView extends StatefulWidget {
@@ -17,9 +16,10 @@ class CarrosListView extends StatefulWidget {
 
 class _CarrosListViewState extends State<CarrosListView>
     with AutomaticKeepAliveClientMixin<CarrosListView> {
-
   List<Carro> carros;
-  final _streamController = StreamController<List<Carro>>();
+  final _bloc = CarrosBloc();
+
+  String get tipo => widget.tipo;
 
   @override
   bool get wantKeepAlive => true;
@@ -27,13 +27,7 @@ class _CarrosListViewState extends State<CarrosListView>
   @override
   void initState() {
     super.initState();
-    if(!_streamController.isClosed)
-      _loadCarros();
-  }
-
-  void _loadCarros() async {
-    List<Carro> listCarros = await CarrosApi.getCarros(this.widget.tipo);
-    _streamController.add(listCarros);
+    _bloc.fetch(tipo);
   }
 
   @override
@@ -41,16 +35,11 @@ class _CarrosListViewState extends State<CarrosListView>
     super.build(context);
 
     return StreamBuilder(
-      stream: _streamController.stream,
+      stream: _bloc.stream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           print(snapshot.error);
-          return Center(
-            child: Text(
-              "Não foi possível buscar os carros!",
-              style: TextStyle(color: Colors.red, fontSize: 22),
-            ),
-          );
+          return TextError("Não foi possível buscar os carros!");
         }
         if (!snapshot.hasData) {
           return Center(
@@ -134,6 +123,6 @@ class _CarrosListViewState extends State<CarrosListView>
   @override
   void dispose() {
     super.dispose();
-    _streamController.close();
+    _bloc.dispose();
   }
 }
